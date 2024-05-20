@@ -53,7 +53,6 @@ class TestOTARequestHandler(unittest.TestCase):
         with open(firmware_file_path, "rb") as file:
             self.assertEqual(response.content, file.read())
 
-
         os.remove(firmware_file_path)
 
     def test_version_txt_with_different_firmware_version(self):
