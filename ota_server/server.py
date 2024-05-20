@@ -1,6 +1,7 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import datetime
 import os
+from .utils import print_devices, print_google_spreadsheet_dict
 
 VERSION_FILE_PATH = "ota_server/version/version.txt"
 FIRMWARE_DIR_PATH = "ota_server/firmware"
@@ -49,9 +50,9 @@ class OTARequestHandler(BaseHTTPRequestHandler):
                 print("Device firmware updated:")
                 new_or_updated = True
 
-        self.print_devices()
+        print_devices(self.devices)
         if new_or_updated:
-            self.print_google_spreadsheet_dict([self.devices[mac_address]])
+            print_google_spreadsheet_dict([self.devices[mac_address]])
         self.send_response(200)
         self.end_headers()
         with open(VERSION_FILE_PATH, "rb") as file:
@@ -78,7 +79,7 @@ class OTARequestHandler(BaseHTTPRequestHandler):
             current_version = self.devices[mac_address]["FW Version"]
             if firmware_version == current_version:
                 self.devices[mac_address]["Last Seen Time"] = now
-                self.print_devices()
+                print_devices(self.devices)
                 self.send_response(200)
                 self.end_headers()
                 self.wfile.write(
@@ -101,9 +102,9 @@ class OTARequestHandler(BaseHTTPRequestHandler):
                     )
                 new_or_updated = True
 
-        self.print_devices()
+        print_devices(self.devices)
         if new_or_updated:
-            self.print_google_spreadsheet_dict([self.devices[mac_address]])
+            print_google_spreadsheet_dict([self.devices[mac_address]])
         self.send_response(200)
         self.end_headers()
         with open(firmware_file, "rb") as file:
@@ -112,46 +113,6 @@ class OTARequestHandler(BaseHTTPRequestHandler):
     def get_latest_firmware_version(self):
         with open(VERSION_FILE_PATH, "r") as file:
             return file.read().strip()
-
-    def print_devices(self):
-        print(
-            f"{'MAC':<20} {'FW Version':<15} {'Update Time':<20} "
-            f"{'Last Seen Time':<20}"
-        )
-        print("=" * 75)
-        for mac, info in self.devices.items():
-            update_time = (
-                info["Update Time"].strftime("%Y-%m-%d %H:%M:%S")
-                if info["Update Time"]
-                else "N/A"
-            )
-            last_seen_time = info["Last Seen Time"].strftime("%Y-%m-%d %H:%M:%S")
-            print(
-                f"{mac:<20} {info['FW Version']:<15} {update_time:<20} "
-                f"{last_seen_time:<20}"
-            )
-        print()
-
-    def print_google_spreadsheet_dict(self, report):
-        data = []
-        for info in report:
-            data.append(
-                {
-                    "MAC": info["MAC"],
-                    "FW Version": info["FW Version"],
-                    "Update Time": (
-                        info["Update Time"].strftime("%Y-%m-%d %H:%M:%S")
-                        if info["Update Time"]
-                        else "N/A"
-                    ),
-                    "Last Seen Time": info["Last Seen Time"].strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    ),
-                }
-            )
-        print("Google Spreadsheet Data:")
-        print(data)
-        print()
 
 
 def run(server_class=HTTPServer, handler_class=OTARequestHandler, port=7777):
