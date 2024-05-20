@@ -1,6 +1,7 @@
-from http.server import BaseHTTPRequestHandler
+import signal
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
-from http.server import HTTPServer
 import datetime
 import os
 from .utils import print_devices, print_google_spreadsheet_dict
@@ -125,7 +126,15 @@ def run(server_class=ThreadingHTTPServer, handler_class=OTARequestHandler, port=
     server_address = ("", port)
     httpd = server_class(server_address, handler_class)
     print(f"Starting OTA server on port {port}...")
+
+    def signal_handler(sig, frame):
+        print("Shutting down server...")
+        threading.Thread(target=httpd.shutdown).start()
+
+    signal.signal(signal.SIGINT, signal_handler)
+
     httpd.serve_forever()
+    print("Server successfully shut down.")
 
 
 if __name__ == "__main__":
