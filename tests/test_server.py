@@ -43,7 +43,6 @@ class TestOTARequestHandler(unittest.TestCase):
 
     def test_firmware_bin_with_headers(self):
         headers = {"_br_mac_": "00:11:22:33:44:55", "_br_fwv_": "1.0.0"}
-        # Создайте фиктивный файл прошивки для теста
         firmware_version = "1.0.0"
         firmware_file_path = f"ota_server/firmware/firmware_{firmware_version}.bin"
         with open(firmware_file_path, "wb") as file:
@@ -54,7 +53,7 @@ class TestOTARequestHandler(unittest.TestCase):
         with open(firmware_file_path, "rb") as file:
             self.assertEqual(response.content, file.read())
 
-        # Удалите фиктивный файл прошивки после теста
+
         os.remove(firmware_file_path)
 
     def test_version_txt_with_different_firmware_version(self):
