@@ -1,0 +1,12 @@
+[Unit]
+Description=OTA Server
+After=network.target
+
+[Service]
+User=your_user
+WorkingDirectory=ota_server
+ExecStart=/venv/bin/python3 -m ota_server.server
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
