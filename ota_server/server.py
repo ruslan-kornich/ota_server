@@ -1,4 +1,6 @@
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
+from http.server import HTTPServer
 import datetime
 import os
 from .utils import print_devices, print_google_spreadsheet_dict
@@ -115,7 +117,11 @@ class OTARequestHandler(BaseHTTPRequestHandler):
             return file.read().strip()
 
 
-def run(server_class=HTTPServer, handler_class=OTARequestHandler, port=7777):
+class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
+    """Handle requests in a separate thread."""
+
+
+def run(server_class=ThreadingHTTPServer, handler_class=OTARequestHandler, port=7777):
     server_address = ("", port)
     httpd = server_class(server_address, handler_class)
     print(f"Starting OTA server on port {port}...")
