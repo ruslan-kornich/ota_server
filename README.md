@@ -1,6 +1,7 @@
 # OTA Server
 
 This is a simple HTTP server used for OTA updates for devices. The server logs the following information:
+
 - Last Seen Time
 - Update Time
 - Current Firmware Version
@@ -13,15 +14,14 @@ This is a simple HTTP server used for OTA updates for devices. The server logs t
    git clone https://github.com/ruslan-kornich/ota_server.git
    cd ota_server
    ```
-   
+
 2. **Create and activate a virtual environment:**:
+
 ```bash
     python -m venv venv
     source venv/bin/activate  
 
    ```
-
-
 
 3. **Install dependencies:**:
 
@@ -29,15 +29,31 @@ This is a simple HTTP server used for OTA updates for devices. The server logs t
    pip install -r requirements.txt 
 
    ```
+
 # Running the Server
 
 To start the server, run the following command:
+
 ```bash
    python -m ota_server.server
 
    ```
+
 The server will start on port 7777 by default.
+
 # Testing the Server
+
+## Running Tests
+
+To run the tests, use the following command:
+
+```bash
+   python -m unittest discover
+   ```
+
+The tests will automatically find a free port and run the server on that port to avoid conflicts with the main server.
+
+# Using the OTA Server
 
 ## Check Firmware Version
 
@@ -52,11 +68,13 @@ To check the firmware version, use the following curl command:
 
 
    ```
+
 This request should return the contents of the version.txt file.
 
 ## Download Firmware
 
 To download the firmware, use the following curl command:
+
 ```bash
    curl -X GET http://localhost:7777/firmware.bin \
      -H 'cache-control: no-cache' \
@@ -64,6 +82,7 @@ To download the firmware, use the following curl command:
      -H '_br_mac_: 00:11:22:33:44:55' \
      -H '_br_fwv_: v1.0.0'
    ```
+
 This request should return the contents of the firmware_<version>.bin file.
 
 # File Locations
@@ -74,6 +93,7 @@ This request should return the contents of the firmware_<version>.bin file.
 Ensure these files exist in their respective directories for the server to function correctly.
 
 # Logging
+
 The server logs information about each device's interaction:
 
 - Last Seen Time: When the device last checked the firmware version.
@@ -82,5 +102,6 @@ The server logs information about each device's interaction:
 - MAC: The MAC address of the device.
 
 # Handling Signals
+
 The server handles shutdown signals (e.g., SIGINT for Ctrl+C) gracefully, ensuring all threads are properly terminated.
 

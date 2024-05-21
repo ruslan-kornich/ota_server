@@ -1,19 +1,27 @@
 import unittest
 import os
+import socket
 from http.server import HTTPServer
-from ota_server.server import OTARequestHandler, run
+from ota_server.server import OTARequestHandler
 import threading
 import requests
 
-SERVER_PORT = 7777
-BASE_URL = f"http://localhost:{SERVER_PORT}"
+
+def find_free_port():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("", 0))
+        return s.getsockname()[1]
+
+
+TEST_SERVER_PORT = find_free_port()
+BASE_URL = f"http://localhost:{TEST_SERVER_PORT}"
 
 
 class TestOTARequestHandler(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.server = HTTPServer(("localhost", SERVER_PORT), OTARequestHandler)
+        cls.server = HTTPServer(("localhost", TEST_SERVER_PORT), OTARequestHandler)
         cls.thread = threading.Thread(target=cls.server.serve_forever)
         cls.thread.daemon = True
         cls.thread.start()
