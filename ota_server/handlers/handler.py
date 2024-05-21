@@ -1,24 +1,38 @@
 from http.server import BaseHTTPRequestHandler
 import datetime
 import os
-from ota_server.utils import print_devices, print_google_spreadsheet_dict
+import re
+import logging
+from ota_server.utils import table_log_devices, send_data_to_google_spreadsheet
 
 VERSION_FILE_PATH = "ota_server/version/version.txt"
 FIRMWARE_DIR_PATH = "ota_server/firmware"
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+
+def is_valid_mac(mac):
+    return re.match("[0-9a-f]{2}([:-][0-9a-f]{2}){5}$", mac.lower())
 
 
 class OTARequestHandler(BaseHTTPRequestHandler):
     devices = {}
 
     def do_GET(self):
-        if not self.headers.get("_br_mac_") or not self.headers.get("_br_fwv_"):
+        mac_address = self.headers.get("_br_mac_")
+        firmware_version = self.headers.get("_br_fwv_")
+
+        if not mac_address or not firmware_version or not is_valid_mac(mac_address):
             self.send_response(401)
             self.end_headers()
             self.wfile.write(b"Unauthorized")
+            logging.warning(
+                f"Unauthorized access attempt with MAC: {mac_address}, FW Version: {firmware_version}"
+            )
             return
 
-        mac_address = self.headers["_br_mac_"]
-        firmware_version = self.headers["_br_fwv_"]
         now = datetime.datetime.utcnow()
 
         if self.path == "/version.txt":
@@ -29,6 +43,7 @@ class OTARequestHandler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
             self.wfile.write(b"Not Found")
+            logging.warning(f"404 Not Found: {self.path}")
 
     def handle_version_txt(self, mac_address, firmware_version, now):
         new_or_updated = False
@@ -40,23 +55,31 @@ class OTARequestHandler(BaseHTTPRequestHandler):
                 "Last Seen Time": now,
                 "Update Time": None,
             }
-            print("New device added:")
+            logging.info(f"New device added: {mac_address}")
             new_or_updated = True
         else:
             self.devices[mac_address]["Last Seen Time"] = now
             if self.devices[mac_address]["FW Version"] != firmware_version:
                 self.devices[mac_address]["Update Time"] = now
                 self.devices[mac_address]["FW Version"] = firmware_version
-                print("Device firmware updated:")
+                logging.info(
+                    f"Device firmware updated: {mac_address} to version {firmware_version}"
+                )
                 new_or_updated = True
 
-        print_devices(self.devices)
+        # table_log_devices(self.devices)
         if new_or_updated:
-            print_google_spreadsheet_dict([self.devices[mac_address]])
+            send_data_to_google_spreadsheet([self.devices[mac_address]])
         self.send_response(200)
         self.end_headers()
-        with open(VERSION_FILE_PATH, "rb") as file:
-            self.wfile.write(file.read())
+        try:
+            with open(VERSION_FILE_PATH, "rb") as file:
+                self.wfile.write(file.read())
+        except Exception as e:
+            self.send_response(500)
+            self.end_headers()
+            self.wfile.write(b"Internal Server Error")
+            logging.error(f"Error reading version file: {e}")
 
     def handle_firmware_bin(self, mac_address, firmware_version, now):
         new_or_updated = False
@@ -66,9 +89,8 @@ class OTARequestHandler(BaseHTTPRequestHandler):
         )
 
         if not os.path.exists(firmware_file):
-            print(
-                f"Error: Requested firmware version {firmware_version} "
-                f"not found for device {mac_address}."
+            logging.error(
+                f"Requested firmware version {firmware_version} not found for device {mac_address}."
             )
             self.send_response(404)
             self.end_headers()
@@ -79,37 +101,48 @@ class OTARequestHandler(BaseHTTPRequestHandler):
             current_version = self.devices[mac_address]["FW Version"]
             if firmware_version == current_version:
                 self.devices[mac_address]["Last Seen Time"] = now
-                print_devices(self.devices)
+                # table_log_devices(self.devices)
                 self.send_response(200)
                 self.end_headers()
                 self.wfile.write(
                     f"You are already on version {firmware_version}. "
                     f"Latest available version is {latest_firmware_version}.".encode()
                 )
+                logging.info(
+                    f"Device {mac_address} checked for firmware version {firmware_version}, already up-to-date."
+                )
                 return
             else:
                 self.devices[mac_address]["Update Time"] = now
                 self.devices[mac_address]["FW Version"] = firmware_version
                 if firmware_version < current_version:
-                    print(
-                        f"Device {mac_address} downgraded from version "
-                        f"{current_version} to {firmware_version}."
+                    logging.info(
+                        f"Device {mac_address} downgraded from version {current_version} to {firmware_version}."
                     )
                 else:
-                    print(
-                        f"Device {mac_address} upgraded from version "
-                        f"{current_version} to {firmware_version}."
+                    logging.info(
+                        f"Device {mac_address} upgraded from version {current_version} to {firmware_version}."
                     )
                 new_or_updated = True
 
-        print_devices(self.devices)
+        # table_log_devices(self.devices)
         if new_or_updated:
-            print_google_spreadsheet_dict([self.devices[mac_address]])
+            send_data_to_google_spreadsheet([self.devices[mac_address]])
         self.send_response(200)
         self.end_headers()
-        with open(firmware_file, "rb") as file:
-            self.wfile.write(file.read())
+        try:
+            with open(firmware_file, "rb") as file:
+                self.wfile.write(file.read())
+        except Exception as e:
+            self.send_response(500)
+            self.end_headers()
+            self.wfile.write(b"Internal Server Error")
+            logging.error(f"Error reading firmware file: {e}")
 
     def get_latest_firmware_version(self):
-        with open(VERSION_FILE_PATH, "r") as file:
-            return file.read().strip()
+        try:
+            with open(VERSION_FILE_PATH, "r") as file:
+                return file.read().strip()
+        except Exception as e:
+            logging.error(f"Error reading latest firmware version file: {e}")
+            return "unknown"

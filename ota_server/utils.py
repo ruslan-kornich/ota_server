@@ -1,8 +1,11 @@
-def print_devices(devices):
-    print(
-        f"{'MAC':<20} {'FW Version':<15} {'Update Time':<20} " f"{'Last Seen Time':<20}"
+import logging
+
+
+def table_log_devices(devices):
+    logging.info(
+        f"{'MAC':<20} {'FW Version':<15} {'Update Time':<20} {'Last Seen Time':<20}"
     )
-    print("=" * 75)
+    logging.info("=" * 75)
     for mac, info in devices.items():
         update_time = (
             info["Update Time"].strftime("%Y-%m-%d %H:%M:%S")
@@ -10,14 +13,12 @@ def print_devices(devices):
             else "N/A"
         )
         last_seen_time = info["Last Seen Time"].strftime("%Y-%m-%d %H:%M:%S")
-        print(
-            f"{mac:<20} {info['FW Version']:<15} {update_time:<20} "
-            f"{last_seen_time:<20}"
+        logging.info(
+            f"{mac:<20} {info['FW Version']:<15} {update_time:<20} {last_seen_time:<20}"
         )
-    print()
 
 
-def print_google_spreadsheet_dict(report):
+def send_data_to_google_spreadsheet(report):
     data = []
     for info in report:
         data.append(
@@ -32,6 +33,6 @@ def print_google_spreadsheet_dict(report):
                 "Last Seen Time": info["Last Seen Time"].strftime("%Y-%m-%d %H:%M:%S"),
             }
         )
-    print("Google Spreadsheet Data:")
-    print(data)
-    print()
+    logging.info("Google Spreadsheet Data:")
+    for entry in data:
+        logging.info(entry)
