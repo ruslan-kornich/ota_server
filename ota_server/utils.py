@@ -1,4 +1,5 @@
 import logging
+import re
 
 
 def table_log_devices(devices):
@@ -36,3 +37,7 @@ def send_data_to_google_spreadsheet(report):
     logging.info("Google Spreadsheet Data:")
     for entry in data:
         logging.info(entry)
+
+
+def is_valid_mac(mac):
+    return re.match("[0-9a-f]{2}([:-][0-9a-f]{2}){5}$", mac.lower())

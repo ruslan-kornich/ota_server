@@ -3,7 +3,11 @@ import datetime
 import os
 import re
 import logging
-from ota_server.utils import table_log_devices, send_data_to_google_spreadsheet
+from ota_server.utils import (
+    table_log_devices,
+    send_data_to_google_spreadsheet,
+    is_valid_mac,
+)
 
 VERSION_FILE_PATH = "ota_server/version/version.txt"
 FIRMWARE_DIR_PATH = "ota_server/firmware"
@@ -11,10 +15,6 @@ FIRMWARE_DIR_PATH = "ota_server/firmware"
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
-
-
-def is_valid_mac(mac):
-    return re.match("[0-9a-f]{2}([:-][0-9a-f]{2}){5}$", mac.lower())
 
 
 class OTARequestHandler(BaseHTTPRequestHandler):
@@ -139,7 +139,8 @@ class OTARequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(b"Internal Server Error")
             logging.error(f"Error reading firmware file: {e}")
 
-    def get_latest_firmware_version(self):
+    @staticmethod
+    def get_latest_firmware_version():
         try:
             with open(VERSION_FILE_PATH, "r") as file:
                 return file.read().strip()
