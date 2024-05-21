@@ -1,5 +1,6 @@
 import signal
 import threading
+import argparse
 from http.server import HTTPServer
 from socketserver import ThreadingMixIn
 from .handlers.handler import OTARequestHandler
@@ -34,4 +35,12 @@ def run(server_class=ThreadingHTTPServer, handler_class=OTARequestHandler, port=
 
 
 if __name__ == "__main__":
-    run()
+    parser = argparse.ArgumentParser(description="Start OTA server.")
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=7777,
+        help="Port number to run the server on (default: 7777)",
+    )
+    args = parser.parse_args()
+    run(port=args.port)
