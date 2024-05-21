@@ -83,3 +83,4 @@ The server logs information about each device's interaction:
 
 # Handling Signals
 The server handles shutdown signals (e.g., SIGINT for Ctrl+C) gracefully, ensuring all threads are properly terminated.
+
