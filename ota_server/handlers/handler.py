@@ -1,10 +1,8 @@
 from http.server import BaseHTTPRequestHandler
 import datetime
 import os
-import re
 import logging
 from ota_server.utils import (
-    table_log_devices,
     send_data_to_google_spreadsheet,
     is_valid_mac,
 )
@@ -67,10 +65,11 @@ class OTARequestHandler(BaseHTTPRequestHandler):
                 )
                 new_or_updated = True
 
-        # table_log_devices(self.devices)
         if new_or_updated:
             send_data_to_google_spreadsheet([self.devices[mac_address]])
-        self.send_response(200)
+
+        self.send_response(200)  # OK
+
         self.end_headers()
         try:
             with open(VERSION_FILE_PATH, "rb") as file:
@@ -101,13 +100,8 @@ class OTARequestHandler(BaseHTTPRequestHandler):
             current_version = self.devices[mac_address]["FW Version"]
             if firmware_version == current_version:
                 self.devices[mac_address]["Last Seen Time"] = now
-                # table_log_devices(self.devices)
-                self.send_response(200)
+                self.send_response(204)  # No Content
                 self.end_headers()
-                self.wfile.write(
-                    f"You are already on version {firmware_version}. "
-                    f"Latest available version is {latest_firmware_version}.".encode()
-                )
                 logging.info(
                     f"Device {mac_address} checked for firmware version {firmware_version}, already up-to-date."
                 )
@@ -125,10 +119,11 @@ class OTARequestHandler(BaseHTTPRequestHandler):
                     )
                 new_or_updated = True
 
-        # table_log_devices(self.devices)
         if new_or_updated:
             send_data_to_google_spreadsheet([self.devices[mac_address]])
-        self.send_response(200)
+
+        self.send_response(200)  # OK
+
         self.end_headers()
         try:
             with open(firmware_file, "rb") as file:

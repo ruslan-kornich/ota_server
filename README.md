@@ -7,6 +7,10 @@ This is a simple HTTP server used for OTA updates for devices. The server logs t
 - Current Firmware Version
 - Device MAC address
 
+## Block Diagram of the Program Logic
+
+![Block Diagram](./screenshots/diagram.jpg)
+
 ## Setup
 
 1. **Clone the repository**:
@@ -41,6 +45,14 @@ To start the server, run the following command:
 
 The server will start on port 7777 by default.
 
+You can also run on a custom port by specifying the flag --port {port}
+
+Example: 
+
+```bash
+   python -m ota_server.server --port 8000
+   
+   ```
 # Testing the Server
 
 ## Running Tests
