@@ -7,6 +7,31 @@ This is a simple HTTP server used for OTA updates for devices. The server logs t
 - Current Firmware Version
 - Device MAC address
 
+# Tasks and Time Estimates
+
+1. **Design architecture and setup development environment**
+   - Design the project architecture, set up the development environment, and install necessary dependencies.
+   - **Time**: 1.5 hours
+
+2. **Implement the functionality**
+   - Implement the OTA server functionality, including handling version check and firmware download requests, collecting device information, and logging data.
+   - **Time**: 2.5 hours
+
+3. **Prepare unit tests**
+   - Prepare and write unit tests to verify the main functions and request handlers.
+   - **Time**: 1 hour
+
+4. **Code Refactor**
+   - Refactor the code to improve readability, maintainability, and performance.
+   - **Time**: 1 hour
+
+5. **Make manual end-to-end testing and add detailed documentation to the README file**
+   - Perform manual end-to-end testing to verify the overall functionality, and add detailed documentation to the README file, including setup, running, and testing instructions.
+   - **Time**: 1 hour
+
+### Total Estimated Time: 7 hours
+
+
 ## Block Diagram of the Program Logic
 
 ![Block Diagram](./screenshots/diagram.jpg)
